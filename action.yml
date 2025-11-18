@@ -1,0 +1,37 @@
+name: 'SedStart RunCI'
+description: 'Trigger test runs on SedStart and stream SSE logs.'
+author: 'Your Name'
+branding:
+  icon: 'play'
+  color: 'green'
+
+inputs:
+  apiKey:
+    description: 'SedStart API key (use GitHub Secret)'
+    required: true
+  projectId:
+    description: 'Project ID'
+    required: true
+  testId:
+    description: 'Test ID'
+    required: true
+  profileId:
+    description: 'Profile ID'
+    required: true
+  browser:
+    description: 'Browser (chrome|firefox)'
+    required: false
+    default: 'chrome'
+  headless:
+    description: 'true or false'
+    required: false
+    default: 'true'
+  environment:
+    description: 'QA or Prod (default: Prod)'
+    required: false
+    default: 'Prod'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
+
