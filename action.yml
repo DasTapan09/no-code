@@ -1,37 +1,35 @@
-name: 'SedStart RunCI'
-description: 'Trigger test runs on SedStart and stream SSE logs.'
-author: 'Your Name'
+name: "Run CI on Sedstart No-Code Platform"
+description: "Trigger CI run on Sedstart automation platform"
+author: "Atmaram Naik / Sedstart"
 branding:
-  icon: 'play'
-  color: 'green'
+  icon: "play"
+  color: "blue"
 
 inputs:
   api_key:
-    description: 'SedStart API key (use GitHub Secret)'
+    description: "APIKey for authentication"
     required: true
   project_id:
-    description: 'Project ID'
+    description: "Project ID"
     required: true
   test_id:
-    description: 'Test ID'
+    description: "Test ID"
     required: true
   profile_id:
-    description: 'Profile ID'
+    description: "Profile ID"
     required: true
   browser:
-    description: 'Browser (chrome|firefox)'
-    required: false
-    default: 'chrome'
+    description: "Browser to run the test (e.g., chrome)"
+    required: true
   headless:
-    description: 'true or false'
+    description: "Run in headless mode (true/false)"
     required: false
-    default: 'true'
+    default: "false"
   environment:
-    description: 'QA or Prod (default: Prod)'
+    description: "Environment to run on: QA or Prod (default: Prod)"
     required: false
-    default: 'Prod'
+    default: "Prod"
 
 runs:
   using: 'node20'
   main: 'dist/index.js'
-

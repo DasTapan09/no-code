@@ -35140,16 +35140,62 @@ function fixResponseChunkedTransferBadEnding(request, errorCallback) {
 ;// CONCATENATED MODULE: ./src/index.js
 
 
+function formatReadableEvent(obj) {
+  const status = obj.status || obj.result?.status || "";
+  const prefix =
+    status === "PASS" || status === "success" ? "✅" :
+    status === "FAIL" || status === "failure" ? "❌" :
+    status === "ERROR" ? "🔥" :
+    "📢";
+
+  let msg = `${prefix} ${obj.message || status}`;
+
+  // If inside "result"
+  if (obj.result) {
+    const r = obj.result;
+
+    if (r.name) msg += ` → ${r.name}`;
+    if (r.time) msg += ` (Time: ${r.time})`;
+    if (r.error) msg += `\n   ⚠️ Error: ${r.error}`;
+    if (r.video?.length) msg += `\n   🎥 Video: ${r.video[0]}`;
+  }
+
+  // If inside "data"
+  if (obj.data) {
+    const d = obj.data;
+    if (typeof d === "string") {
+      msg += ` → ${d}`;
+    } else if (typeof d === "object") {
+      if (d.step) msg += ` → Step: ${d.step}`;
+      if (d.status) msg += ` → Status: ${d.status}`;
+      if (d.error) msg += `\n   ⚠️ Error: ${d.error}`;
+    }
+  }
+
+  return msg;
+}
 
 async function run() {
   try {
-    const apiKey     = core.getInput("api_key", { required: true });
-    const projectId  = core.getInput("project_id", { required: true });
-    const testId     = core.getInput("test_id", { required: true });
-    const profileId  = core.getInput("profile_id", { required: true });
-    const browser    = core.getInput("browser", { required: true });
-    const headless   = core.getInput("headless") === "true";
+    const apiKey = core.getInput("api_key", { required: true });
+    const projectId = core.getInput("project_id", { required: true });
+    const testId = core.getInput("test_id");
+    const suiteId = core.getInput("suite_id");
+    const profileId = core.getInput("profile_id", { required: true });
+    const browser = core.getInput("browser", { required: true });
+    const headless = core.getInput("headless") === "true";
     const environment = core.getInput("environment") || "Prod";
+    if (!testId && !suiteId) {
+      core.setFailed("You must provide either test_id or suite_id.");
+      return;
+    }
+    let idPayload = {};
+
+    if (suiteId) {
+      idPayload.suite_id = Number(suiteId);
+    } else {
+      idPayload.test_id = Number(testId);
+    }
 
     // ✅ Determine Base URL
     const baseUrl =
@@ -35163,7 +35209,7 @@ async function run() {
 
     const payload = {
       project_id: Number(projectId),
-      test_id: Number(testId),
+      ...idPayload,
       profile_id: Number(profileId),
       browser,
       headless
@@ -35172,7 +35218,7 @@ async function run() {
     const response = await fetch(url, {
       method: "POST",
       headers: {
-        "X-API-Key": apiKey,
+        "Authorization": "APIKey " + apiKey,
         "Content-Type": "application/json"
       },
       body: JSON.stringify(payload)
@@ -35196,32 +35242,34 @@ async function run() {
       buffer += text;
 
       const parts = buffer.split(/\r?\n/);
-      buffer = parts.pop(); // incomplete line stays in buffer
+      buffer = parts.pop();
 
       for (const line of parts) {
         if (!line.trim()) continue;
 
-        if (line.startsWith("data:")) {
-          const jsonText = line.slice(5).trim();
+        if (!line.startsWith("data:")) continue;
 
-          try {
-            const obj = JSON.parse(jsonText);
-            console.log(JSON.stringify(obj, null, 2));
+        const jsonText = line.slice(5).trim();
+        let obj;
 
-            if (obj?.result?.status) {
-              finalStatus = obj.result.status;
-            }
-            if (obj?.run?.status) {
-              finalStatus = obj.run.status;
-            }
-          } catch (err) {
-            console.log("⚠️ Invalid SSE JSON:", jsonText);
-          }
-        } else {
-          console.log(line);
+        try {
+          obj = JSON.parse(jsonText);
+        } catch {
+          console.log(`⚠️ Could not parse event: ${jsonText}`);
+          continue;
+        }
+
+        // ✅ HUMAN-FRIENDLY LOGGING
+        console.log(formatReadableEvent(obj));
+
+        // ✅ Extract ONLY the test result status
+        if (obj?.result?.status) {
+          finalStatus = obj.result.status;
+          console.log(`✅ Result Status Updated → ${finalStatus}`);
         }
       }
     });
+
 
     stream.on("end", () => {
       console.log("✅ SSE Stream ended.");
@@ -35244,7 +35292,6 @@ async function run() {
 }
 
 run();
-
 
 })();
 
