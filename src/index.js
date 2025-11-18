@@ -10,10 +10,10 @@ function chooseBaseUrl(env) {
 
 async function run() {
   try {
-    const apiKey = core.getInput('apiKey', { required: true });
-    const projectId = core.getInput('projectId', { required: true });
-    const testId = core.getInput('testId', { required: true });
-    const profileId = core.getInput('profileId', { required: true });
+    const apiKey = core.getInput('api_key', { required: true });
+    const projectId = core.getInput('project_id', { required: true });
+    const testId = core.getInput('test_id', { required: true });
+    const profileId = core.getInput('profile_id', { required: true });
     const browser = core.getInput('browser') || 'chrome';
     const headless = (core.getInput('headless') || 'true').toLowerCase() === 'true';
     const environment = core.getInput('environment') || 'Prod';
