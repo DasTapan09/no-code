@@ -32899,18 +32899,6 @@ return new B(c,{type:"multipart/form-data; boundary="+b})}
 /******/ 	__nccwpck_require__.m = __webpack_modules__;
 /******/ 	
 /************************************************************************/
-/******/ 	/* webpack/runtime/compat get default export */
-/******/ 	(() => {
-/******/ 		// getDefaultExport function for compatibility with non-harmony modules
-/******/ 		__nccwpck_require__.n = (module) => {
-/******/ 			var getter = module && module.__esModule ?
-/******/ 				() => (module['default']) :
-/******/ 				() => (module);
-/******/ 			__nccwpck_require__.d(getter, { a: getter });
-/******/ 			return getter;
-/******/ 		};
-/******/ 	})();
-/******/ 	
 /******/ 	/* webpack/runtime/define property getters */
 /******/ 	(() => {
 /******/ 		// define getter functions for harmony exports
@@ -33004,7 +32992,6 @@ var __webpack_exports__ = {};
 
 // EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
 var core = __nccwpck_require__(7484);
-var core_default = /*#__PURE__*/__nccwpck_require__.n(core);
 ;// CONCATENATED MODULE: external "node:http"
 const external_node_http_namespaceObject = require("node:http");
 ;// CONCATENATED MODULE: external "node:https"
@@ -35163,13 +35150,13 @@ function chooseBaseUrl(env) {
 
 async function run() {
   try {
-    const apiKey = core_default().getInput('apiKey', { required: true });
-    const projectId = core_default().getInput('projectId', { required: true });
-    const testId = core_default().getInput('testId', { required: true });
-    const profileId = core_default().getInput('profileId', { required: true });
-    const browser = core_default().getInput('browser') || 'chrome';
-    const headless = (core_default().getInput('headless') || 'true').toLowerCase() === 'true';
-    const environment = core_default().getInput('environment') || 'Prod';
+    const apiKey = core.getInput('apiKey', { required: true });
+    const projectId = core.getInput('projectId', { required: true });
+    const testId = core.getInput('testId', { required: true });
+    const profileId = core.getInput('profileId', { required: true });
+    const browser = core.getInput('browser') || 'chrome';
+    const headless = (core.getInput('headless') || 'true').toLowerCase() === 'true';
+    const environment = core.getInput('environment') || 'Prod';
 
     const baseUrl = chooseBaseUrl(environment);
     const url = `${baseUrl}/api/project/${projectId}/runCI`;
@@ -35236,12 +35223,12 @@ async function run() {
     console.log('SSE stream ended. Final status:', finalStatus);
 
     if (finalStatus === 'PASS' || finalStatus === 'SUCCESS') {
-      core_default().setOutput('result', finalStatus);
+      core.setOutput('result', finalStatus);
     } else {
-      core_default().setFailed(`Run finished with status: ${finalStatus || 'UNKNOWN'}`);
+      core.setFailed(`Run finished with status: ${finalStatus || 'UNKNOWN'}`);
     }
   } catch (err) {
-    core_default().setFailed(err.message || String(err));
+    core.setFailed(err.message || String(err));
   }
 }
 
