@@ -6,16 +6,16 @@ branding:
   color: 'green'
 
 inputs:
-  apiKey:
+  api_key:
     description: 'SedStart API key (use GitHub Secret)'
     required: true
-  projectId:
+  project_id:
     description: 'Project ID'
     required: true
-  testId:
+  test_id:
     description: 'Test ID'
     required: true
-  profileId:
+  profile_id:
     description: 'Profile ID'
     required: true
   browser:
