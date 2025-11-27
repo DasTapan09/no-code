@@ -1,38 +1,70 @@
 import * as core from '@actions/core';
 import fetch from "node-fetch";
-function formatReadableEvent(obj) {
-  const status = obj.status || obj.result?.status || "";
-  const prefix =
-    status === "PASS" || status === "success" ? "✅" :
-    status === "FAIL" || status === "failure" ? "❌" :
-    status === "ERROR" ? "🔥" :
-    "📢";
+// ------- Pretty Print (same as Orb style) ------------------
+const spinnerFrames = ["⠋","⠙","⠹","⠸","⠼","⠴","⠦","⠧","⠇","⠏"];
+let spinnerIndex = 0;
 
-  let msg = `${prefix} ${obj.message || status}`;
+function clearScreen() {
+  process.stdout.write('\x1b[2J\x1b[0;0H');
+}
 
-  // If inside "result"
-  if (obj.result) {
-    const r = obj.result;
+function emoji(status = "") {
+  const st = status.toUpperCase();
+  if (st === "PASS" || st === "SUCCESS") return "✅";
+  if (st === "FAIL" || st === "FAILURE") return "❌";
+  if (st.includes("IN")) return "⏳";
+  return "ℹ️";
+}
 
-    if (r.name) msg += ` → ${r.name}`;
-    if (r.time) msg += ` (Time: ${r.time})`;
-    if (r.error) msg += `\n   ⚠️ Error: ${r.error}`;
-    if (r.video?.length) msg += `\n   🎥 Video: ${r.video[0]}`;
+function logPretty(obj) {
+  if (!obj?.result) {
+    console.log("[sedstart]", JSON.stringify(obj));
+    return;
   }
 
-  // If inside "data"
-  if (obj.data) {
-    const d = obj.data;
-    if (typeof d === "string") {
-      msg += ` → ${d}`;
-    } else if (typeof d === "object") {
-      if (d.step) msg += ` → Step: ${d.step}`;
-      if (d.status) msg += ` → Status: ${d.status}`;
-      if (d.error) msg += `\n   ⚠️ Error: ${d.error}`;
+  const result = obj.result;
+  const type = (result.type || "").toLowerCase();
+
+  if (type === "run") {
+    const pref = emoji(result.status);
+    console.log(`${pref} ${result.status}`);
+
+    if (result.error) console.log(`❌ Error: ${result.error}`);
+    if (Array.isArray(result.video)) {
+      result.video.forEach(v => console.log(`🎥 ${v}`));
+    }
+    return;
+  }
+
+  if (type === "test") {
+    clearScreen();
+
+    const name = result.name || "<unnamed>";
+    const st = result.status || "UNKNOWN";
+    const upper = st.toUpperCase();
+    const spin = (!upper || upper.includes("IN")) ? spinnerFrames[spinnerIndex++ % spinnerFrames.length] : "";
+
+    console.log(`🧪 Test: ${name} — ${st} ${spin}`);
+
+    const items = Array.isArray(result.items) ? result.items : [];
+    for (const testStep of items) {
+      if ((testStep.type || "").toLowerCase() !== "teststep") continue;
+
+      console.log(`  • ${testStep.name} — ${testStep.status}`);
+
+      for (const stepItem of testStep.items || []) {
+        if ((stepItem.type || "").toLowerCase() !== "stepitem") continue;
+
+        console.log(`    - ${stepItem.name} — ${stepItem.status}`);
+
+        for (const action of stepItem.items || []) {
+          if ((action.type || "").toLowerCase() !== "resourceelementaction") continue;
+
+          console.log(`      → ${action.name} — ${action.status}`);
+        }
+      }
     }
   }
-
-  return msg;
 }
 
 async function run() {
@@ -120,7 +152,7 @@ async function run() {
         }
 
         // ✅ HUMAN-FRIENDLY LOGGING
-        console.log(formatReadableEvent(obj));
+        logPretty(obj);
 
         // ✅ Extract ONLY the test result status
         if (obj?.result?.status) {
